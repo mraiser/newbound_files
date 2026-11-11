@@ -2,8 +2,6 @@
 
 The **files** app for [Newbound](https://github.com/mraiser/newbound): share a folder with your peers, browse theirs, and mount a peer's share on your filesystem over WebDAV. Everything that crosses between machines travels over the encrypted Newbound peer channel.
 
-> **Status: work in progress.** The code lives on the `work_gx10a` branch; `master` is still empty. The local share and the WebDAV endpoints are tested on a single instance, including a loopback through the peer adapter. Nothing has been run against a second peer yet, and no real `rclone` or `davfs2` mount has been made.
-
 ## What it does
 
 - **A shared folder.** Each instance shares `runtime/files/shared`. Nothing outside that folder is reachable: every path goes through one resolver that rejects traversal (`.` and `..`), absolute paths, control characters and symlinks.
@@ -14,8 +12,6 @@ The **files** app for [Newbound](https://github.com/mraiser/newbound): share a f
 ## Install
 
 In a running Newbound instance, import this repo with the Development app's GitHub import (`dev.github.import`) using the repo URL. That clones it into `repositories/newbound_files` and links `data/files`. The library compiles to its own crate, so the instance needs one restart afterwards.
-
-Until the work branch is merged, the import gets an empty `master`; check out `work_gx10a` in the clone and rebuild the library.
 
 Mounting needs a Newbound core with opt-in HTTP Basic auth in the listener (`basicauth=true` in `config.properties`).
 
