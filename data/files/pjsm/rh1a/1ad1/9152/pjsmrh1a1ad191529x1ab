@@ -1,1 +1,1 @@
-{"data":{"name":"make_collection","rust":"mxzpit1a1ad1915b1v1ac","type":"rust"},"id":"pjsmrh1a1ad191529x1ab","readers":[],"time":1794357112756,"username":"system","writers":[]}
+{"data":{"name":"make_collection","rust":"mxzpit1a1ad1915b1v1ac","type":"rust"},"id":"pjsmrh1a1ad191529x1ab","readers":["files-write"],"time":1794358845582,"username":"system","writers":[]}
