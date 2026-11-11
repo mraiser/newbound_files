@@ -62,7 +62,7 @@ umask 077
 W=$(mktemp -d /tmp/newbound-dav-write-r1.XXXXXX)
 # Populate "$W/cookie_header" with the temporary admin Cookie header.
 DAV_COOKIE_HEADER="$W/cookie_header" DAV_WORK="$W" \
-  python3 data/files/_ASSETS/webdav-write-r1/verify.py
+  python3 tests/webdav-write-r1/verify.py
 ```
 
 The script only deletes its own fixed `webdav-write-check-r1` share tree and

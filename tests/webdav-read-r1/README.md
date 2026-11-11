@@ -32,7 +32,7 @@ stored only in a chmod-600 file (the ID was never printed or put in evidence):
 
 ```sh
 DAV_COOKIE_HEADER="$W/cookie_header" DAV_WORK="$W" \
-  python3 data/files/_ASSETS/webdav-read-r1/verify.py
+  python3 tests/webdav-read-r1/verify.py
 ```
 
 The cookie header is `Cookie: sessionid=<temporary admin session>`. The

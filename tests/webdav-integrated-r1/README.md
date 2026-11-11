@@ -22,7 +22,7 @@ env -u DAV_SKIP_KNOWN_LISTENER_ERROR \
   DAV_COOKIE_HEADER=/tmp/newbound-dav-integrated-r1/cookie_header \
   DAV_WORK=/tmp/newbound-dav-integrated-r1/strict RCLONE=rclone \
   nix-shell -p rclone --run \
-  'python3 data/files/_ASSETS/webdav-integrated-r1/verify.py'
+  'python3 tests/webdav-integrated-r1/verify.py'
 ```
 
 **Result: exit 0, 114 assertions, zero skips.** Its final line was:
@@ -40,7 +40,7 @@ The component suites were then rerun against the same listener:
 ```sh
 env DAV_COOKIE_HEADER=/tmp/newbound-dav-integrated-r1/cookie_header \
   DAV_WORK=/tmp/newbound-dav-integrated-r1/read-final \
-  python3 data/files/_ASSETS/webdav-read-r1/verify.py
+  python3 tests/webdav-read-r1/verify.py
 ```
 
 **Result: exit 0, 41 assertions**, XML parsed and scoped cleanup completed.
@@ -48,7 +48,7 @@ env DAV_COOKIE_HEADER=/tmp/newbound-dav-integrated-r1/cookie_header \
 ```sh
 env DAV_COOKIE_HEADER=/tmp/newbound-dav-integrated-r1/cookie_header \
   DAV_WORK=/tmp/newbound-dav-integrated-r1/write-final \
-  python3 data/files/_ASSETS/webdav-write-r1/verify.py
+  python3 tests/webdav-write-r1/verify.py
 ```
 
 **Result: exit 0, 114 assertions**, byte comparisons and scoped cleanup
