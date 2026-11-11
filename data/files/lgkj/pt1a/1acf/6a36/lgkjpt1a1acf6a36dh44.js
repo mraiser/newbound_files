@@ -3,13 +3,14 @@ var ME = $('#' + me.UUID)[0];
 
 me.ready = function(){
   // peer '' = this instance's own share; otherwise the uuid of the peer being browsed
-  var state = { path: '', peer: '' };
+  var state = { path: '', peer: '', peers: [] };
 
+  var $app    = $(ME).find('.fb');
   var $crumbs = $(ME).find('.fb-crumbs');
   var $list   = $(ME).find('.fb-list');
   var $status = $(ME).find('.fb-status');
   var $upload = $(ME).find('.fb-file');
-  var $peer   = $(ME).find('.fb-peer');
+  var $peers  = $(ME).find('.fb-peers');
 
   function say(msg, isErr){
     $status.text(msg || '').toggleClass('is-err', !!isErr);
@@ -27,19 +28,48 @@ me.ready = function(){
     });
   }
 
+  function shareName(){
+    if (!state.peer) return 'My share';
+    for (var i = 0; i < state.peers.length; i++) if (state.peers[i].id === state.peer) return state.peers[i].name || state.peer;
+    return state.peer;
+  }
+
+  // ---- shares: mine, then every peer ----
+  function renderPeers(){
+    $peers.empty();
+    var row = function(id, name, on){
+      var $r = $('<div class="fb-peer"></div>').toggleClass('on', id === state.peer).toggleClass('off', !on);
+      $r.append($('<span class="fb-dot"></span>').toggleClass('on', on));
+      $r.append($('<span class="fb-peer-name"></span>').text(name));
+      if (on) $r.on('click', function(){ pick(id); });
+      $peers.append($r);
+    };
+    row('', 'My share', true);
+    state.peers.forEach(function(p){ row(p.id, p.name || p.id, !!p.connected); });
+    $(ME).find('.fb-none').attr('hidden', state.peers.length ? true : null);
+  }
+
   function loadPeers(){
     $.getJSON('/peer/peers').done(function(r){
       var peers = Array.isArray(r) ? r : (r && Array.isArray(r.data) ? r.data : []);
-      peers.sort(function(a, b){ return String(a.name || a.id).localeCompare(String(b.name || b.id)); });
-      $peer.find('option').slice(1).remove();
-      peers.forEach(function(p){
-        $peer.append($('<option></option>').val(p.id)
-          .text((p.name || p.id) + (p.connected ? '' : ' (offline)'))
-          .prop('disabled', !p.connected && p.id !== state.peer));
+      peers.sort(function(a, b){
+        return (!!b.connected - !!a.connected) || String(a.name || a.id).localeCompare(String(b.name || b.id));
       });
-      $peer.val(state.peer);
+      state.peers = peers;
+      renderPeers();
+      renderCrumbs(state.path); // the root crumb carries the peer's name
     });
   }
+
+  function pick(id){
+    state.peer = id;
+    $app.addClass('open');
+    $(ME).find('.fb-upload, .fb-dav').attr('hidden', id ? true : null); // uploads and the DAV mount are for your own share
+    renderPeers();
+    go('');
+  }
+
+  $(ME).find('.fb-back').on('click', function(){ $app.removeClass('open'); });
 
   function fmtSize(n){
     if (n === null || n === undefined) return '';
@@ -64,7 +94,7 @@ me.ready = function(){
   }
 
   // The backend answers paths like "./agent"; strip the leading "./" so the
-  // breadcrumb shows "root / agent" and not "root / . / agent".
+  // breadcrumb shows "share / agent" and not "share / . / agent".
   function cleanPath(p){
     var s = String(p || '').replace(/\\/g, '/');
     while (s.indexOf('./') === 0) s = s.slice(2);
@@ -83,7 +113,7 @@ me.ready = function(){
       else $a.on('click', function(){ go(target); });
       $crumbs.append($a);
     };
-    add('root', '', parts.length === 0);
+    add(shareName(), '', parts.length === 0);
     parts.forEach(function(seg, idx){
       acc = acc ? acc + '/' + seg : seg;
       add(seg, acc, idx === parts.length - 1);
@@ -104,12 +134,12 @@ me.ready = function(){
       $row.append($('<span class="fb-size"></span>').text(isDir ? '' : fmtSize(e.size)));
       $row.append($('<span class="fb-mtime"></span>').text(fmtTime(e.mtime)));
       if (isDir){
+        $row.append('<span></span>');
         $row.on('click', function(){ go(e.path); });
       } else {
-        var $dl = $('<a class="fb-dl">download</a>')
+        $row.append($('<a class="fb-dl">download</a>')
           .attr('href', base() + 'get_file?path=' + encodeURIComponent(e.path))
-          .attr('download', e.name);
-        $row.append($dl);
+          .attr('download', e.name));
       }
       $list.append($row);
     });
@@ -121,7 +151,7 @@ me.ready = function(){
     renderCrumbs(state.path);
     say('Loading…');
     listDir(state.path, function(result){
-      if (peer !== state.peer) return; // the picker moved on while this was in flight
+      if (peer !== state.peer) return; // another share was picked while this was in flight
       if (!result || result.status !== 'ok'){
         say((result && result.msg) || 'Could not list this folder.', true);
         $list.empty().append($('<div class="fb-empty"></div>').text('Nothing to show.'));
@@ -136,12 +166,6 @@ me.ready = function(){
       else say(entries.length + (entries.length === 1 ? ' item' : ' items'));
     });
   }
-
-  $peer.on('change', function(){
-    state.peer = $peer.val() || '';
-    $(ME).find('.fb-upload').toggle(!state.peer); // uploads go to your own share only
-    go('');
-  });
 
   async function uploadFile(file, directory){
     var relative = joinPath(directory, file.name);
@@ -190,6 +214,7 @@ me.ready = function(){
     go(directory, { message: message, isErr: errors.length > 0 });
   });
 
+  renderPeers();
   loadPeers();
   setInterval(loadPeers, 15000);
   go('');

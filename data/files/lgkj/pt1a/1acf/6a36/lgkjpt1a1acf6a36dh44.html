@@ -1,24 +1,40 @@
-<div class="filesapp">
-  <header class="fb-head">
-    <select class="fb-peer" aria-label="Whose share" title="Whose shared folder to browse">
-      <option value="">My share</option>
-    </select>
-    <nav class="fb-crumbs" aria-label="Path"></nav>
-    <div class="fb-actions">
-      <label class="fb-upload" title="Upload a file into this folder">
+<div class='data-control' data-control='app:tokens:{}' hidden></div>
+
+<div class="fb">
+  <aside class="fb-side">
+    <header class="fb-bar">
+      <a class="fb-home" href="../app/index.html" title="All apps" aria-label="All apps">&#8962;</a>
+      <span class="fb-title">Files</span>
+    </header>
+    <div class="fb-peers" aria-label="Whose share"></div>
+    <div class="fb-none" hidden>No peers yet. Connect to one in the <a href="../peer/index.html">Peers</a> app.</div>
+  </aside>
+
+  <section class="fb-main">
+    <header class="fb-bar fb-head">
+      <button class="fb-back" title="Back to shares" aria-label="Back to shares">&#8249;</button>
+      <nav class="fb-crumbs" aria-label="Path"></nav>
+      <label class="fb-upload" title="Upload files into this folder">
         <input type="file" class="fb-file" multiple>
         <span>Upload</span>
       </label>
+    </header>
+
+    <div class="fb-cols">
+      <span></span>
+      <span class="lbl">Name</span>
+      <span class="lbl fb-r">Size</span>
+      <span class="lbl fb-r fb-mtime">Modified</span>
+      <span></span>
     </div>
-  </header>
 
-  <div class="fb-status" role="status" aria-live="polite"></div>
+    <main class="fb-list" aria-label="Directory listing">
+      <div class="fb-empty">Loading…</div>
+    </main>
 
-  <main class="fb-list" aria-label="Directory listing">
-    <div class="fb-empty">Loading…</div>
-  </main>
-
-  <footer class="fb-foot">
-    <span class="fb-dav">Connect via WebDAV: <code>/files/dav</code></span>
-  </footer>
+    <footer class="fb-foot">
+      <span class="fb-status" role="status" aria-live="polite"></span>
+      <span class="fb-dav lbl">WebDAV /files/dav</span>
+    </footer>
+  </section>
 </div>
