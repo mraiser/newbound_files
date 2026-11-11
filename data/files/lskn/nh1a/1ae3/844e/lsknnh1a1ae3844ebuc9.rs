@@ -214,7 +214,7 @@ match method.as_str() {
         }
         let existed = path.is_file();
         if path.is_dir() { return http_error(405, "Method Not Allowed", "PUT target is a collection"); }
-        let result = put_file(target.clone(), nn_body.clone());
+        let result = put_file(target.clone(), nn_body.clone(), DataObject::new());
         if result.has("status") && result.get_string("status") == "err" { return operation_error(result, 500); }
         if existed { http_response(204, "No Content", String::new(), "text/plain") }
         else { http_response(201, "Created", String::new(), "text/plain") }

@@ -1,4 +1,4 @@
-const ALLOW: &str = "OPTIONS, PROPFIND, GET, HEAD, MKCOL, DELETE, COPY, MOVE";
+const ALLOW: &str = "OPTIONS, PROPFIND, GET, HEAD, PUT, MKCOL, DELETE, COPY, MOVE";
 
 fn resp(code: i64, reason: &str, body: &str, mime: &str) -> DataObject {
     let mut out = DataObject::new();
@@ -295,11 +295,62 @@ match method.as_str() {
         }
     },
     "PUT" => {
-        let mut out = fail(403, "Uploading to a peer's share is not supported yet");
-        let mut headers = out.get_object("headers");
-        headers.put_string("Allow", ALLOW);
-        out.put_object("headers", headers);
-        out
+        if target.is_empty() { return fail(405, "PUT requires a file path"); }
+        let existed = match propfind("0", String::new()) {
+            Ok(xml) => { if xml.contains("collection/>") { return fail(405, "PUT target is a collection"); } true },
+            Err(e) => { if e.get_int("code") != 404 { return e; } false },
+        };
+        if let Some(i) = target.rfind('/') {
+            match pf(&target[..i], "0", String::new()) {
+                Ok(xml) => if !xml.contains("collection/>") { return fail(409, "PUT parent is not a collection"); },
+                Err(e) => return if e.get_int("code") == 404 { fail(409, "PUT parent collection does not exist") } else { e },
+            }
+        }
+        let done = |r: Result<DataObject, DataObject>| match r {
+            Ok(_) => if existed { resp(204, "No Content", "", "text/plain") } else { resp(201, "Created", "", "text/plain") },
+            Err(e) => e,
+        };
+        if uuid == "local" {
+            // Loopback for the test harness: this instance's own share.
+            let d = put_file(target.clone(), nn_body.clone(), DataObject::new());
+            let bad = d.has("status") && d.get_property("status").is_string() && d.get_string("status") == "err";
+            return done(if bad {
+                let code = if d.has("code") && d.get_property("code").is_int() { d.get_int("code") } else { 500 };
+                Err(fail(code, &err_text(&d)))
+            } else { Ok(d) });
+        }
+        let data: Vec<u8> = if nn_body.is_bytes() { nn_body.bytes().get_data() }
+            else if nn_body.is_string() { nn_body.string().into_bytes() }
+            else { Vec::new() };
+        let mut p = DataObject::new();
+        p.put_string("path", &target);
+        if data.is_empty() {
+            p.put_string("content", "");
+            return done(write("put_file", p));
+        }
+        // Open a stream to the peer, pump the body into it, and have the peer's put_file join it.
+        let u = uuid.to_string();
+        let id = catch_unwind(AssertUnwindSafe(|| crate::api::peer::service::new_stream(u))).unwrap_or(-1);
+        if id == -1 { return fail(504, "No live route to the peer"); }
+        let mut content = DataObject::new();
+        content.put_int("stream", id);
+        content.put_int("size", data.len() as i64);
+        p.put_object("content", content);
+        let close = |u: String| { let _ = catch_unwind(AssertUnwindSafe(|| crate::api::peer::service::close_stream(u, id, true))); };
+        let u = uuid.to_string();
+        let pump = std::thread::spawn(move || {
+            for chunk in data.chunks(16000) {
+                let (u2, b) = (u.clone(), DataBytes::from_bytes(&chunk.to_vec()));
+                let sent = catch_unwind(AssertUnwindSafe(|| crate::api::peer::service::stream_write(u2, id, b))).unwrap_or(false);
+                if !sent { break; }
+            }
+            let _ = catch_unwind(AssertUnwindSafe(|| crate::api::peer::service::close_stream(u, id, true)));
+        });
+        let r = write("put_file", p);
+        // A refused or failed put never joined the stream: retire it so the pump stops.
+        if r.is_err() { close(uuid.to_string()); }
+        let _ = pump.join();
+        done(r)
     },
     _ => {
         let mut out = fail(405, &format!("{} is not supported by this DAV endpoint", method));
