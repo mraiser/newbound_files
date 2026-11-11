@@ -67,7 +67,7 @@ loop {
     total += chunk.len() as i64;
     if let Err(e) = file.write_all(&chunk) { failed = format!("cannot write {}: {}", path, e); break; }
 }
-if content.is_object() { source.close_read(); }
+if content.is_object() && source.is_read_open() { source.close_read(); }
 drop(file);
 if failed.is_empty() && expect >= 0 && total != expect {
     failed = format!("received {} of {} bytes", total, expect);
