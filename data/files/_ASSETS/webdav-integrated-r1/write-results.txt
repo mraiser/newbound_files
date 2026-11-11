@@ -1,0 +1,114 @@
+options-exact Allow=OPTIONS, PROPFIND, GET, HEAD, PUT, MKCOL, DELETE, COPY, MOVE DAV=1
+allow-exact-on-405 status=405 Allow=OPTIONS, PROPFIND, GET, HEAD, PUT, MKCOL, DELETE, COPY, MOVE
+lock-not-advertised-or-stubbed status=405 expected=405
+unlock-not-advertised-or-stubbed status=405 expected=405
+mkcol-webdav-write-check-r1 status=201 expected=201
+mkcol-webdav-write-check-r1-alpha status=201 expected=201
+mkcol-webdav-write-check-r1-alpha-one status=201 expected=201
+mkcol-webdav-write-check-r1-alpha-one-deep status=201 expected=201
+mkcol-webdav-write-check-r1-dest status=201 expected=201
+mkcol-webdav-write-check-r1-preserve status=201 expected=201
+put-alpha-one-deep-payload.bin status=201 expected=201
+put-alpha-one-deep-beta.bin status=201 expected=201
+put-dest-original.bin status=201 expected=201
+put-preserve-original.bin status=201 expected=201
+source-byte-parity status=200 sha256=f26783d95e7facae099c25d843411a9523033b101326ceb806cf201eefdfdc66
+copy-file-origin status=201 expected=201
+copy-file-bytes
+copy-file-source-retained
+copy-missing-destination status=400 expected=400
+copy-tree-absolute status=201 expected=201
+copy-tree-payload-bytes
+copy-tree-beta-bytes
+copy-overwrite-f status=412 expected=412
+copy-f-preserved
+copy-f-source-preserved
+copy-overwrite-t status=204 expected=204
+copy-t-replaced
+copy-t-source-preserved
+put-stale-destination status=201 expected=201
+copy-tree-overwrite-t status=204 expected=204
+tree-overwrite-replaced-not-merged
+copy-missing-parent status=409 expected=409
+move-missing-parent status=409 expected=409
+missing-parent-no-artifact
+copy-missing-source status=404 expected=404
+delete-missing status=404 expected=404
+copy-same status=403 expected=403
+copy-own-subtree status=403 expected=403
+move-own-subtree status=403 expected=403
+move-onto-ancestor status=403 expected=403
+ancestor-validation-preserved
+delete-root-rejected status=403 expected=403
+copy-root-rejected status=403 expected=403
+move-root-rejected status=403 expected=403
+root-and-source-survive
+destination-rejected-0 status=403 expected=403
+destination-source-preserved-0
+destination-rejected-1 status=403 expected=403
+destination-source-preserved-1
+destination-rejected-2 status=403 expected=403
+destination-source-preserved-2
+destination-rejected-3 status=403 expected=403
+destination-source-preserved-3
+destination-rejected-4 status=403 expected=403
+destination-source-preserved-4
+destination-rejected-5 status=403 expected=403
+destination-source-preserved-5
+destination-rejected-6 status=403 expected=403
+destination-source-preserved-6
+destination-rejected-7 status=403 expected=403
+destination-source-preserved-7
+destination-rejected-8 status=403 expected=403
+destination-source-preserved-8
+source-encoded-traversal status=403 expected=403
+relative-destination status=400 expected=400
+lowercase-overwrite status=400 expected=400
+symlink-rejected-0 status=403 expected=403
+outside-unchanged
+symlink-rejected-1 status=403 expected=403
+outside-unchanged
+symlink-rejected-2 status=403 expected=403
+outside-unchanged
+symlink-rejected-3 status=403 expected=403
+outside-unchanged
+symlink-rejected-4 status=403 expected=403
+outside-unchanged
+symlink-rejected-5 status=403 expected=403
+outside-unchanged
+symlink-rejected-6 status=403 expected=403
+outside-unchanged
+nested-source-symlink-preserved
+nested-destination-symlink-preserved
+nested-destination-old-preserved
+destination-ancestry-no-artifact
+no-partial-nested-copy
+put-rename-payload status=201 expected=201
+move-tree status=201 expected=201
+move-source-gone
+move-payload-bytes
+move-rename-bytes
+move-file status=201 expected=201
+move-file-source-gone
+move-file-bytes
+move-overwrite-f status=412 expected=412
+move-f-destination-preserved
+move-f-source-preserved
+move-overwrite-t status=204 expected=204
+move-t-replaced
+move-t-source-gone
+anonymous-copy status=403 expected=403
+anonymous-move status=403 expected=403
+anonymous-delete status=403 expected=403
+anonymous-write-did-not-run
+fixture-link-preserved-links/source-link
+fixture-link-preserved-links/destination-link
+fixture-link-preserved-links/ancestry-link
+fixture-link-preserved-nested-source/escape
+fixture-link-preserved-nested-destination/escape
+outside-unchanged
+recursive-delete-renamed-tree status=204 expected=204
+recursive-delete-renamed-gone
+recursive-delete-test-root status=204 expected=204
+recursive-delete-test-root-gone
+outside-unchanged

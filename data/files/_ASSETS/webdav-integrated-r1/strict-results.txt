@@ -1,0 +1,32 @@
+options status=200 expected=200
+options-allow OPTIONS, PROPFIND, GET, HEAD, PUT, MKCOL, DELETE, COPY, MOVE
+options-dav-no-locking DAV=1
+invalid-chunk-framing-400-close responses=1
+invalid-chunk-created-nothing bad-framing.bin absent
+json-get http=200 status=ok
+json-post http=200 status=ok
+json-post-chunked http=200 status=ok
+files-ui-index status=200 bytes=462
+files-ui-facet-css status=200 bytes=22
+files-ui-facet-js status=200 bytes=77
+anonymous-json-existing-behavior status=200; separate UI JSON API permits anonymous list_dir (not broadened by DAV)
+anonymous-dav-write-boundary status=403 artifact=false
+anonymous-OPTIONS status=403 expected=403
+anonymous-PROPFIND status=403 expected=403
+anonymous-GET status=403 expected=403
+anonymous-HEAD status=403 expected=403
+anonymous-PUT status=403 expected=403
+anonymous-MKCOL status=403 expected=403
+anonymous-DELETE status=403 expected=403
+anonymous-COPY status=403 expected=403
+anonymous-MOVE status=403 expected=403
+anonymous-POST status=403 expected=403
+rclone-supported-version rclone v1.74.4
+rclone-download-byte-parity bytes=131087 sha256=344e093b232520f6e03bbe8d08ee0fc595f1506188cb9e1ed07f2c6f2ee56c7d
+rclone-rename-source-gone source=404
+rclone-copy-bytes source and copy match
+rclone-purge-absent purged=404
+outside-sentinel-final external bytes unchanged
+no-test-artifacts leftovers=[]
+VERIFIED: 114 live integrated assertions passed; rclone byte parity, chunked/framing, security, JSON/UI and cleanup
+Full unabridged assertion list: results-final.tar.gz / strict/results.txt

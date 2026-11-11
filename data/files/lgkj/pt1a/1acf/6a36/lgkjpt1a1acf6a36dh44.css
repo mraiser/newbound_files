@@ -1,0 +1,157 @@
+/* files — minimalist browser. One accent, generous whitespace, no chrome
+   beyond the breadcrumb and the listing. */
+.filesapp {
+  --accent: #2f6feb;
+  --ink: #1c1f24;
+  --muted: #8a9099;
+  --rule: #eceef1;
+  --bg: #ffffff;
+
+  box-sizing: border-box;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 28px 56px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.filesapp *, .filesapp *::before, .filesapp *::after { box-sizing: inherit; }
+
+/* ---- breadcrumb bar ---- */
+.fb-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.fb-peer {
+  flex: none;
+  max-width: 220px;
+  padding: 5px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+.fb-crumbs {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px;
+  min-width: 0;
+  font-size: 15px;
+}
+.fb-crumbs .fb-crumb {
+  color: var(--accent);
+  text-decoration: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fb-crumbs .fb-crumb:hover { background: rgba(47, 111, 235, 0.08); }
+.fb-crumbs .fb-crumb.is-here { color: var(--ink); font-weight: 600; cursor: default; }
+.fb-crumbs .fb-crumb.is-here:hover { background: none; }
+.fb-crumbs .fb-sep { color: var(--muted); padding: 0 1px; user-select: none; }
+
+/* ---- upload affordance ---- */
+.fb-actions { flex: none; }
+.fb-upload {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.fb-upload:hover { border-color: var(--accent); background: rgba(47, 111, 235, 0.06); }
+.fb-upload input[type="file"] { display: none; }
+
+/* ---- status line ---- */
+.fb-status {
+  min-height: 20px;
+  padding: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fb-status.is-err { color: #c0392b; }
+
+/* ---- listing ---- */
+.fb-list { padding-top: 8px; }
+.fb-row {
+  display: grid;
+  grid-template-columns: 22px 1fr 96px 150px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 6px;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  color: inherit;
+}
+.fb-row:last-child { border-bottom: none; }
+.fb-row:hover { background: rgba(47, 111, 235, 0.04); }
+.fb-row .fb-icon {
+  width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+}
+.fb-row.is-dir .fb-icon { color: var(--accent); }
+.fb-row .fb-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fb-row.is-dir .fb-name { color: var(--accent); cursor: pointer; }
+.fb-row .fb-size,
+.fb-row .fb-mtime {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.fb-row .fb-dl {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12.5px;
+  text-align: right;
+  white-space: nowrap;
+}
+.fb-row .fb-dl:hover { text-decoration: underline; }
+
+.fb-empty {
+  padding: 28px 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---- footer: the quiet WebDAV line ---- */
+.fb-foot {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.fb-foot code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+@media (max-width: 620px) {
+  .filesapp { padding: 24px 16px 40px; }
+  .fb-row { grid-template-columns: 22px 1fr 84px; }
+  .fb-row .fb-mtime { display: none; }
+}
