@@ -1,1 +1,1 @@
-{"data":{"name":"delete_path","rust":"mlkrim1a1ad195821n1af","type":"rust"},"id":"jwrgii1a1ad195808j1ae","readers":[],"time":1794357113919,"username":"system","writers":[]}
+{"data":{"name":"delete_path","rust":"mlkrim1a1ad195821n1af","type":"rust"},"id":"jwrgii1a1ad195808j1ae","readers":["files-write"],"time":1794358846794,"username":"system","writers":[]}

@@ -1,4 +1,4 @@
-const ALLOW: &str = "OPTIONS, PROPFIND, GET, HEAD";
+const ALLOW: &str = "OPTIONS, PROPFIND, GET, HEAD, MKCOL, DELETE, COPY, MOVE";
 
 fn resp(code: i64, reason: &str, body: &str, mime: &str) -> DataObject {
     let mut out = DataObject::new();
@@ -20,6 +20,8 @@ fn fail(code: i64, message: &str) -> DataObject {
         403 => "Forbidden",
         404 => "Not Found",
         405 => "Method Not Allowed",
+        409 => "Conflict",
+        412 => "Precondition Failed",
         415 => "Unsupported Media Type",
         501 => "Not Implemented",
         502 => "Bad Gateway",
@@ -100,9 +102,9 @@ let target = match decode_path(raw) {
 let prefix = format!("/files/peerdav/{}", uuid);
 
 // PROPFIND on the peer's own files.propfind, with hrefs under THIS mount point.
-let propfind = |depth: &str, xml: String| -> Result<String, DataObject> {
+let pf = |path: &str, depth: &str, xml: String| -> Result<String, DataObject> {
     let mut p = DataObject::new();
-    p.put_string("path", &target);
+    p.put_string("path", path);
     p.put_string("href_prefix", &prefix);
     p.put_string("depth", depth);
     p.put_string("request_xml", &xml);
@@ -115,6 +117,24 @@ let propfind = |depth: &str, xml: String| -> Result<String, DataObject> {
     let ok = r.has("status") && r.get_property("status").is_string() && r.get_string("status") == "ok";
     if ok && r.has("msg") && r.get_property("msg").is_string() { Ok(r.get_string("msg")) }
     else { Err(remote_err(&err_text(&r))) }
+};
+let propfind = |depth: &str, xml: String| pf(&target, depth, xml);
+
+// A write on the peer's own files command; the peer gates it with its files-write group.
+let write = |cmd: &str, p: DataObject| -> Result<DataObject, DataObject> {
+    let r = peer_exec(uuid, "files", cmd, p);
+    let is_err = |o: &DataObject| o.has("status") && o.get_property("status").is_string() && o.get_string("status") == "err";
+    if is_err(&r) || !r.has("status") {
+        let text = err_text(&r);
+        if text.contains("UNAUTHORIZED") { return Err(fail(403, "The peer has not put you in its files-write group")); }
+        return Err(remote_err(&text));
+    }
+    let d = if r.has("data") && r.get_property("data").is_object() { r.get_object("data") } else { DataObject::new() };
+    if is_err(&d) {
+        let code = if d.has("code") && d.get_property("code").is_int() { d.get_int("code") } else { 500 };
+        return Err(fail(code, &err_text(&d)));
+    }
+    Ok(d)
 };
 
 match method.as_str() {
@@ -208,8 +228,74 @@ match method.as_str() {
         }
         remote_err(&err_text(&r))
     },
-    "PUT" | "MKCOL" | "DELETE" | "COPY" | "MOVE" => {
-        let mut out = fail(403, "A peer's share is mounted read-only");
+    "MKCOL" => {
+        if target.is_empty() { return fail(405, "MKCOL target already exists"); }
+        match propfind("0", String::new()) {
+            Ok(_) => return fail(405, "MKCOL target already exists"),
+            Err(e) => if e.get_int("code") != 404 { return e; },
+        }
+        if let Some(i) = target.rfind('/') {
+            match pf(&target[..i], "0", String::new()) {
+                Ok(xml) => if !xml.contains("collection/>") { return fail(409, "MKCOL parent is not a collection"); },
+                Err(e) => return if e.get_int("code") == 404 { fail(409, "MKCOL parent collection does not exist") } else { e },
+            }
+        }
+        let mut p = DataObject::new();
+        p.put_string("path", &target);
+        match write("make_collection", p) {
+            Ok(_) => resp(201, "Created", "", "text/plain"),
+            Err(e) => e,
+        }
+    },
+    "DELETE" | "COPY" | "MOVE" => {
+        if target.is_empty() { return fail(403, "The share root cannot be deleted, copied or moved"); }
+        let mut p = DataObject::new();
+        p.put_string("operation", &method);
+        p.put_string("source", &target);
+        if method == "DELETE" {
+            p.put_string("destination", "");
+            p.put_string("overwrite", "T");
+            return match write("dav_tree", p) {
+                Ok(_) => resp(204, "No Content", "", "text/plain"),
+                Err(e) => e,
+            };
+        }
+        let dest = match nn_headers.try_get_string("DESTINATION") {
+            Ok(v) => v.trim().to_string(),
+            Err(_) => return fail(400, "COPY and MOVE require a Destination header"),
+        };
+        if dest.contains('?') || dest.contains('#') { return fail(400, "Destination query strings and fragments are not supported"); }
+        let dpath = match dest.split_once("://") {
+            Some((_, rem)) => {
+                let (authority, path) = match rem.find('/') { Some(i) => (&rem[..i], &rem[i..]), None => (rem, "/") };
+                let host = nn_headers.try_get_string("HOST").unwrap_or_default();
+                if !host.is_empty() && !authority.eq_ignore_ascii_case(host.trim()) {
+                    return fail(403, "Destination URI authority does not match this DAV server");
+                }
+                path.to_string()
+            },
+            None => dest.clone(),
+        };
+        let drel = match dpath.strip_prefix(&prefix) {
+            Some(s) if s.starts_with('/') => match decode_path(&s[1..]) {
+                Ok(d) => d.trim_end_matches('/').to_string(),
+                Err(message) => return fail(400, &message),
+            },
+            _ => return fail(403, "Destination is outside this peer's mount"),
+        };
+        let overwrite = nn_headers.try_get_string("OVERWRITE").unwrap_or("T".to_string());
+        if overwrite != "T" && overwrite != "F" { return fail(400, "Overwrite must be exactly T or F"); }
+        p.put_string("destination", &drel);
+        p.put_string("overwrite", &overwrite);
+        match write("dav_tree", p) {
+            Ok(d) => if d.has("overwritten") && d.get_property("overwritten").is_boolean() && d.get_boolean("overwritten") {
+                resp(204, "No Content", "", "text/plain")
+            } else { resp(201, "Created", "", "text/plain") },
+            Err(e) => e,
+        }
+    },
+    "PUT" => {
+        let mut out = fail(403, "Uploading to a peer's share is not supported yet");
         let mut headers = out.get_object("headers");
         headers.put_string("Allow", ALLOW);
         out.put_object("headers", headers);
