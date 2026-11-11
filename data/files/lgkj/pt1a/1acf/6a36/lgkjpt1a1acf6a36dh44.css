@@ -32,7 +32,7 @@
 .fb-upload:hover { background: var(--accent); border-color: var(--accent); }
 .fb-upload input { display: none; }
 
-.fb-cols, .fb-row { display: grid; grid-template-columns: 18px 1fr 90px 140px 76px; align-items: center; column-gap: 12px; padding: 0 14px; }
+.fb-cols, .fb-row { display: grid; grid-template-columns: 18px 1fr 90px 140px 76px 20px; align-items: center; column-gap: 12px; padding: 0 14px; }
 .fb-cols { height: 28px; flex: none; border-bottom: 1px solid var(--line-soft); }
 .fb-r { text-align: right; }
 .fb-list { flex: 1; overflow-y: auto; }
@@ -45,6 +45,8 @@
 .fb-size, .fb-row .fb-mtime { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-align: right; white-space: nowrap; }
 .fb-dl { color: var(--accent-dim); text-decoration: none; font-size: 12px; text-align: right; }
 .fb-dl:hover { color: var(--accent); }
+.fb-del { color: var(--text-faint); font-size: 12px; text-align: center; cursor: pointer; }
+.fb-del:hover { color: var(--danger); }
 .fb-empty { padding: 28px 14px; color: var(--text-dim); }
 
 /* status line */
@@ -60,6 +62,6 @@
   .fb.open .fb-side { display: none; }
   .fb.open .fb-main { display: flex; }
   .fb-back { display: block; }
-  .fb-cols, .fb-row { grid-template-columns: 18px 1fr 70px 70px; }
+  .fb-cols, .fb-row { grid-template-columns: 18px 1fr 70px 70px 20px; }
   .fb-mtime { display: none; }
 }

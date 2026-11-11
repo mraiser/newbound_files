@@ -140,6 +140,7 @@ me.ready = function(){
         $row.append($('<a class="fb-dl">download</a>')
           .attr('href', base() + 'get_file?path=' + encodeURIComponent(e.path))
           .attr('download', e.name));
+        $row.append($('<a class="fb-del" title="Delete">✕</a>').on('click', function(){ removeFile(e); }));
       }
       $list.append($row);
     });
@@ -164,6 +165,28 @@ me.ready = function(){
       renderEntries(entries);
       if (completion && completion.message) say(completion.message, completion.isErr);
       else say(entries.length + (entries.length === 1 ? ' item' : ' items'));
+    });
+  }
+
+  // Delete one file from the share being browsed. A peer's share needs its "files-write" group.
+  function removeFile(e){
+    if (!window.confirm('Delete "' + e.name + '" from ' + shareName() + '? This cannot be undone.')) return;
+    var peer = state.peer, directory = state.path;
+    say('Deleting ' + e.name + '…');
+    var done = function(msg, isErr){
+      if (peer !== state.peer) return;
+      go(directory, { message: msg, isErr: isErr });
+    };
+    $.getJSON(base() + 'delete_path', { path: e.path }).done(function(r){
+      var d = (r && r.data) || {};
+      if (!r || r.status !== 'ok' || d.status === 'err'){
+        var why = d.msg || (r && r.msg) || 'refused';
+        if (why === 'UNAUTHORIZED') why = peer ? 'this peer has not put you in its "files-write" group' : 'not allowed';
+        done('Could not delete ' + e.name + ': ' + why, true);
+      }
+      else done('Deleted ' + e.name);
+    }).fail(function(){
+      done('Could not delete ' + e.name + ': ' + (peer ? 'the peer is offline or has not put you in its "files-write" group' : 'request failed'), true);
     });
   }
 
