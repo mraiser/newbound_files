@@ -134,7 +134,11 @@ me.ready = function(){
       $row.append($('<span class="fb-size"></span>').text(isDir ? '' : fmtSize(e.size)));
       $row.append($('<span class="fb-mtime"></span>').text(fmtTime(e.mtime)));
       if (isDir){
-        $row.append('<span></span>');
+        // the archive is built on the sharing machine, then downloaded like any file
+        $row.append($('<a class="fb-dl" title="Download this folder as a zip archive">zip</a>')
+          .attr('href', base() + 'zip_dir?path=' + encodeURIComponent(e.path))
+          .attr('download', e.name + '.zip')
+          .on('click', function(ev){ ev.stopPropagation(); say('Zipping ' + e.name + '… the download starts when the archive is ready.'); }));
         $row.on('click', function(){ go(e.path); });
       } else {
         $row.append($('<a class="fb-dl">download</a>')
@@ -189,6 +193,36 @@ me.ready = function(){
       done('Could not delete ' + e.name + ': ' + (peer ? 'the peer is offline or has not put you in its "files-write" group' : 'request failed'), true);
     });
   }
+
+  // Create a folder in the directory being browsed. A peer's share needs its "files-write" group.
+  $(ME).find('.fb-mkdir').on('click', function(){
+    var name = window.prompt('New folder in ' + (state.path ? shareName() + ' / ' + state.path : shareName()) + ':', '');
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    if (/[\/\\]/.test(name) || name.charAt(0) === '.'){
+      say('A folder name cannot contain a slash or start with a dot.', true);
+      return;
+    }
+    var peer = state.peer, directory = state.path;
+    say('Creating ' + name + '…');
+    var done = function(msg, isErr){
+      if (peer !== state.peer) return;
+      go(directory, { message: msg, isErr: isErr });
+    };
+    $.getJSON(base() + 'make_collection', { path: joinPath(directory, name) }).done(function(r){
+      var d = (r && r.data) || {};
+      if (!r || r.status !== 'ok' || d.status === 'err'){
+        var why = d.msg || (r && r.msg) || 'refused';
+        if (why === 'UNAUTHORIZED') why = peer ? 'this peer has not put you in its "files-write" group' : 'not allowed';
+        done('Could not create ' + name + ': ' + why, true);
+      }
+      else if (d.created === false) done(name + ' already exists');
+      else done('Created folder ' + name);
+    }).fail(function(){
+      done('Could not create ' + name + ': ' + (peer ? 'the peer is offline or has not put you in its "files-write" group' : 'request failed'), true);
+    });
+  });
 
   async function uploadFile(file, directory){
     var relative = joinPath(directory, file.name);

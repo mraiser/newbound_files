@@ -31,6 +31,8 @@
 .fb-upload { flex: none; padding: 5px 12px; border: 1px solid var(--accent-dim); border-radius: 6px; background: var(--accent-dim); color: var(--ground); font-size: 13px; font-weight: 600; cursor: pointer; }
 .fb-upload:hover { background: var(--accent); border-color: var(--accent); }
 .fb-upload input { display: none; }
+.fb-mkdir { flex: none; padding: 5px 12px; border: 1px solid var(--line); border-radius: 6px; background: none; color: var(--text-dim); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.fb-mkdir:hover { color: var(--accent); border-color: var(--accent-dim); }
 
 .fb-cols, .fb-row { display: grid; grid-template-columns: 18px 1fr 90px 140px 76px 20px; align-items: center; column-gap: 12px; padding: 0 14px; }
 .fb-cols { height: 28px; flex: none; border-bottom: 1px solid var(--line-soft); }
