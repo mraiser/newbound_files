@@ -1,0 +1,65 @@
+/* files - kit dialect (app.tokens contract v1): layout only, colors and type from the tokens. */
+
+.fb { display: flex; height: 100vh; background: var(--ground); color: var(--text); }
+.fb-bar { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px; background: var(--panel); border-bottom: 1px solid var(--line); flex: none; box-sizing: border-box; }
+.fb-home { color: var(--text-dim); text-decoration: none; font-size: 18px; }
+.fb-home:hover { color: var(--accent); }
+.fb-title { font-family: var(--disp); font-size: 16px; letter-spacing: 0.06em; }
+
+/* shares: mine, then every peer */
+.fb-side { width: 260px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--line); background: var(--panel); min-width: 0; }
+.fb-peers { flex: 1; overflow-y: auto; }
+.fb-none { padding: 16px 14px; color: var(--text-dim); font-size: 13px; line-height: 1.5; }
+.fb-none a { color: var(--accent); }
+.fb-peer { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
+.fb-peer:hover { background: var(--panel-2); }
+.fb-peer.on { background: var(--panel-3); }
+.fb-peer.off { color: var(--text-faint); cursor: default; }
+.fb-peer.off:hover { background: none; }
+.fb-peer-name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fb-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-faint); flex: none; }
+.fb-dot.on { background: var(--good); }
+
+/* browser */
+.fb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.fb-back { display: none; color: var(--text-dim); font-size: 24px; line-height: 1; padding: 0 6px 2px 0; }
+.fb-crumbs { flex: 1; display: flex; align-items: baseline; gap: 2px; min-width: 0; overflow: hidden; white-space: nowrap; font-family: var(--mono); font-size: 13px; }
+.fb-crumb { color: var(--text-dim); padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+.fb-crumb:hover { color: var(--accent); }
+.fb-crumb.is-here, .fb-crumb.is-here:hover { color: var(--text); cursor: default; }
+.fb-sep { color: var(--text-faint); user-select: none; }
+.fb-upload { flex: none; padding: 5px 12px; border: 1px solid var(--accent-dim); border-radius: 6px; background: var(--accent-dim); color: var(--ground); font-size: 13px; font-weight: 600; cursor: pointer; }
+.fb-upload:hover { background: var(--accent); border-color: var(--accent); }
+.fb-upload input { display: none; }
+
+.fb-cols, .fb-row { display: grid; grid-template-columns: 18px 1fr 90px 140px 76px; align-items: center; column-gap: 12px; padding: 0 14px; }
+.fb-cols { height: 28px; flex: none; border-bottom: 1px solid var(--line-soft); }
+.fb-r { text-align: right; }
+.fb-list { flex: 1; overflow-y: auto; }
+.fb-row { padding-top: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
+.fb-row:hover { background: var(--panel); }
+.fb-row.is-dir { cursor: pointer; }
+.fb-icon { color: var(--text-faint); text-align: center; }
+.fb-row.is-dir .fb-icon { color: var(--accent); }
+.fb-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fb-size, .fb-row .fb-mtime { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-align: right; white-space: nowrap; }
+.fb-dl { color: var(--accent-dim); text-decoration: none; font-size: 12px; text-align: right; }
+.fb-dl:hover { color: var(--accent); }
+.fb-empty { padding: 28px 14px; color: var(--text-dim); }
+
+/* status line */
+.fb-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; height: 30px; padding: 0 14px; flex: none; background: var(--panel); border-top: 1px solid var(--line); font-size: 12px; color: var(--text-dim); }
+.fb-status { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fb-status.is-err { color: var(--danger); }
+.fb-dav { flex: none; text-transform: none; letter-spacing: 0.04em; }
+
+/* narrow: one pane at a time */
+@media (max-width: 640px) {
+  .fb-side { width: 100%; border-right: 0; }
+  .fb-main { display: none; }
+  .fb.open .fb-side { display: none; }
+  .fb.open .fb-main { display: flex; }
+  .fb-back { display: block; }
+  .fb-cols, .fb-row { grid-template-columns: 18px 1fr 70px 70px; }
+  .fb-mtime { display: none; }
+}
