@@ -5,6 +5,27 @@ fn err(message: String) -> DataObject {
     out
 }
 
+// Windows: the share root is canonicalized to a \\?\ path, which skips the
+// Win32 name rules, so these names would be created literally - and
+// Explorer and most tools can then neither open nor delete them: device
+// names (CON, NUL, COM1, ...; with any extension), a trailing dot or space,
+// and the characters Windows reserves (: is also an NTFS stream).
+fn windows_name_problem(name: &str) -> Option<String> {
+    let base = name.split('.').next().unwrap_or("").trim_end().to_ascii_uppercase();
+    let numbered = (base.starts_with("COM") || base.starts_with("LPT"))
+        && base.len() == 4 && matches!(base.as_bytes()[3], b'1'..=b'9');
+    if matches!(base.as_str(), "CON" | "PRN" | "AUX" | "NUL") || numbered {
+        return Some(format!("'{}' is a reserved device name on Windows", name));
+    }
+    if name.ends_with('.') || name.ends_with(' ') {
+        return Some(format!("'{}' ends with a dot or space, which Windows does not allow", name));
+    }
+    if name.chars().any(|c| matches!(c, '<' | '>' | ':' | '"' | '|' | '?' | '*')) {
+        return Some(format!("'{}' contains a character Windows does not allow in names", name));
+    }
+    None
+}
+
 // The files app and its DAV adapter share one deliberately scoped root.
 // Create only this application-owned runtime directory, never a caller path.
 let root = Path::new("runtime/files/shared");
@@ -33,7 +54,12 @@ else {
     }
     for component in Path::new(&decoded).components() {
         match component {
-            Component::Normal(s) => rel.push(s),
+            Component::Normal(s) => {
+                if cfg!(windows) {
+                    if let Some(why) = windows_name_problem(&s.to_string_lossy()) { return err(why); }
+                }
+                rel.push(s)
+            },
             _ => return err("Absolute paths, '.', '..' and platform prefixes are forbidden".to_string())
         }
     }
@@ -58,7 +84,9 @@ let full = canonical_root.join(&rel);
 let mut out = DataObject::new();
 out.put_string("status", "ok");
 out.put_string("path", &full.to_string_lossy());
-let relative = if rel.as_os_str().is_empty() { String::new() } else { rel.to_string_lossy().to_string() };
+// '/' on every OS: a Windows PathBuf joins with '\', which leaked into
+// DAV hrefs (wintest%5Csub) and list_dir paths
+let relative = rel.components().map(|c| c.as_os_str().to_string_lossy().to_string()).collect::<Vec<_>>().join("/");
 out.put_string("relative", &relative);
 out.put_string("root", &canonical_root.to_string_lossy());
 out.put_boolean("exists", full.exists());
