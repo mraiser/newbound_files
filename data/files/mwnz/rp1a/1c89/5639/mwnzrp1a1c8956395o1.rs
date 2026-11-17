@@ -45,10 +45,31 @@ let (cwd, target) = if relative.is_empty() {
 };
 
 // argv form, no shell. -y stores symlinks as links instead of following them out of the share.
-let out = std::process::Command::new("zip")
-    .arg("-qry").arg(&dest).arg(&target)
-    .current_dir(&cwd)
-    .output();
+let out = if cfg!(windows) {
+    // No zip on Windows. System32's tar.exe (bsdtar) writes zip, called by
+    // full path because Git for Windows puts a GNU tar first on PATH. Like
+    // zip -y it stores symlinks as links. Names go in without the ./ that
+    // zip strips; the share root is archived as its entries.
+    let tar = Path::new(&std::env::var("SystemRoot").unwrap_or_else(|_| "C:/Windows".to_string()))
+        .join("System32").join("tar.exe");
+    let mut names: Vec<String> = if relative.is_empty() {
+        std::fs::read_dir(&cwd)
+            .map(|rd| rd.flatten().map(|e| e.file_name().to_string_lossy().to_string()).collect())
+            .unwrap_or_default()
+    } else {
+        vec![target.trim_start_matches("./").to_string()]
+    };
+    names.sort();
+    std::process::Command::new(tar)
+        .arg("-a").arg("-c").arg("-f").arg(&dest).args(&names)
+        .current_dir(&cwd)
+        .output()
+} else {
+    std::process::Command::new("zip")
+        .arg("-qry").arg(&dest).arg(&target)
+        .current_dir(&cwd)
+        .output()
+};
 match out {
     Err(e) => panic!("500 Cannot run zip (is it installed?): {}", e),
     Ok(o) => {
